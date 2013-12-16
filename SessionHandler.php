@@ -39,9 +39,9 @@ class SessionHandler{
 		//check connection
 		if (mysqli_connect_error()) {
 		    throw new Exception('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
-		}//if
+		}
 			
-	}//function
+	}
 	
 	
 	
