@@ -73,10 +73,7 @@ class SessionHandler{
      */
     public function open() {
   
-        //delete old session handlers
-        $limit = time() - (3600 * 24);
-        $sql = sprintf("DELETE FROM %s WHERE timestamp < %s", $this->dbTable, $limit);
-        return $this->dbConnection->query($sql);
+        return TRUE;
 
     }
 
