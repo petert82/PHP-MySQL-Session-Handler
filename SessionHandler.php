@@ -116,12 +116,11 @@ class SessionHandler{
      * @param string data of the session
      */
     public function write($id, $data) {
-
-        $sql = sprintf("REPLACE INTO %s VALUES('%s', '%s', '%s')",
-        			   $this->dbTable, 
+        $sql = sprintf("INSERT INTO `%s` (`id`, `data`) VALUES ('%s', '%s') ON DUPLICATE KEY UPDATE `data` = '%s';",
+                       $this->dbTable,
                        $this->dbConnection->escape_string($id),
                        $this->dbConnection->escape_string($data),
-                       time());
+                       $this->dbConnection->escape_string($data));
         return $this->dbConnection->query($sql);
 
     }
@@ -150,9 +149,11 @@ class SessionHandler{
      * @usage execution rate 1/100
      *        (session.gc_probability/session.gc_divisor)
      */
-    public function gc($max) {
+    public function gc($lifetime) {
 
-        $sql = sprintf("DELETE FROM %s WHERE `timestamp` < '%s'", $this->dbTable, time() - intval($max));
+        $sql = sprintf("DELETE FROM %s WHERE `timestamp` < '%s'",
+                       $this->dbTable,
+                       strftime("%Y-%m-%d %H:%M:%S", time() - intval($lifetime)));
         return $this->dbConnection->query($sql);
 
     }
