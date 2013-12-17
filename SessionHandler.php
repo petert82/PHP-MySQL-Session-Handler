@@ -13,19 +13,25 @@ class SessionHandler{
      * a database MySQLi connection resource
      * @var resource
      */
-    protected $dbConnection;
-    
+    private $dbConnection;
     
     /**
      * the name of the DB table which handles the sessions
      * @var string
      */
-    protected $dbTable;
+    private $dbTable;
+    
+    private $dbHost = '';
+    private $dbUser = '';
+    private $dbPassword = '';
+    private $dbDatabase = '';
+    
+    private $dbConnected = FALSE;
 	
 
 
 	/**
-	 * Set db data if no connection is being injected
+	 * Set db data
 	 * @param 	string	$dbHost	
 	 * @param	string	$dbUser
 	 * @param	string	$dbPassword
@@ -33,29 +39,15 @@ class SessionHandler{
 	 */	
 	public function setDbDetails($dbHost, $dbUser, $dbPassword, $dbDatabase){
 
-		//create db connection
-		$this->dbConnection = new mysqli($dbHost, $dbUser, $dbPassword, $dbDatabase);
-		
-		//check connection
-		if (mysqli_connect_error()) {
-		    throw new Exception('Connect Error (' . mysqli_connect_errno() . ') ' . mysqli_connect_error());
-		}
-			
+		// Store details in case we need to re-connect
+        $this->dbHost = $dbHost;
+        $this->dbUser = $dbUser;
+        $this->dbPassword = $dbPassword;
+        $this->dbDatabase = $dbDatabase;
+        
+        $this->_openDbConnection();
 	}
-	
-	
-	
-	/**
-	 * Inject DB connection from outside
-	 * @param 	object	$dbConnection	expects MySQLi object
-	 */
-	public function setDbConnection($dbConnection){
-	
-		$this->dbConnection = $dbConnection;
 		
-	}
-	
-	
 	/**
 	 * Inject DB connection from outside
 	 * @param 	object	$dbConnection	expects MySQLi object
@@ -66,15 +58,21 @@ class SessionHandler{
 		
 	}
 	
-
     /**
-     * Open the session
+     * Open the session.
+     * 
+     * Connects the database, if the connection is not already open
+     * 
      * @return bool
      */
     public function open() {
   
-        return TRUE;
-
+        if($this->dbConnected)
+        {
+            return TRUE;
+        }
+        
+        return $this->_openDbConnection();
     }
 
     /**
@@ -83,8 +81,9 @@ class SessionHandler{
      */
     public function close() {
 
+        $this->dbConnected = FALSE;
+        
         return $this->dbConnection->close();
-
     }
 
     /**
@@ -109,7 +108,6 @@ class SessionHandler{
         
     }
     
-
     /**
      * Write the session
      * @param int session id
@@ -126,7 +124,7 @@ class SessionHandler{
     }
 
     /**
-     * Destoroy the session
+     * Destroy the session
      * @param int session id
      * @return bool
      */
@@ -137,8 +135,6 @@ class SessionHandler{
 
 	}
 	
-	
-
     /**
      * Garbage Collector
      * @param int life time (sec.)
@@ -157,5 +153,21 @@ class SessionHandler{
         return $this->dbConnection->query($sql);
 
     }
+    
+    /**
+     * Connects to the database
+     */
+    private function _openDbConnection() {
+        // Create db connection
+        $this->dbConnection = new mysqli($this->dbHost, $this->dbUser, $this->dbPassword, $this->dbDatabase);
+        
+        // Check we connected ok
+        if (mysqli_connect_error()) {
+            return FALSE;
+        }
+        
+        $this->dbConnected = TRUE;
+        return TRUE;
+    }
 
-}//class
+}
